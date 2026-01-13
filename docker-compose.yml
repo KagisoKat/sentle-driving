@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: sentle-db
+    environment:
+      POSTGRES_DB: sentle_driving
+      POSTGRES_USER: sentle
+      POSTGRES_PASSWORD: sentle_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - sentle_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentle -d sentle_driving"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  sentle_db_data:
