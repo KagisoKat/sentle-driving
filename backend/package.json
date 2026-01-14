@@ -1,0 +1,21 @@
+{
+	"name": "sentle-driving-backend",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "node --watch src/index.js",
+		"start": "node src/index.js",
+		"migrate": "node src/db/migrate.js"
+	},
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"cookie-parser": "^1.4.6",
+		"cors": "^2.8.5",
+		"express": "^4.19.2",
+		"helmet": "^7.1.0",
+		"jsonwebtoken": "^9.0.2",
+		"pg": "^8.13.0",
+		"zod": "^3.23.8"
+	}
+}

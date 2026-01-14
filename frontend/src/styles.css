@@ -1,0 +1,68 @@
+/* ---- Global reset / base ---- */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	background-color: #f5f7fa;
+	color: #1f2933;
+}
+
+/* ---- App shell ---- */
+.app {
+	min-height: 100vh;
+}
+
+/* ---- Header ---- */
+.header {
+	background-color: #1e3a8a; /* deep blue */
+	color: white;
+	padding: 16px 24px;
+}
+
+.header h1 {
+	margin: 0;
+	font-size: 1.4rem;
+}
+
+/* ---- Navigation ---- */
+.nav {
+	display: flex;
+	gap: 16px;
+	margin-top: 8px;
+}
+
+.nav a {
+	color: #dbeafe;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.nav a:hover {
+	text-decoration: underline;
+}
+
+/* ---- Main content ---- */
+.main {
+	padding: 24px;
+}
+
+/* ---- Cards ---- */
+.card {
+	background: white;
+	border-radius: 8px;
+	padding: 16px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+	margin-bottom: 16px;
+}
+
+/* ---- Status styles ---- */
+.success {
+	color: #065f46;
+}
+
+.error {
+	color: #b91c1c;
+}
