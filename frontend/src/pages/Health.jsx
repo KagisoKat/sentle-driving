@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "../api/client.js";
 
 export default function Health() {
     const [data, setData] = useState(null);
@@ -8,13 +8,12 @@ export default function Health() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await axios.get("http://localhost:5000/health/db");
+                const res = await api.get("/health/db");
                 setData(res.data);
             } catch {
                 setError("Failed to reach backend. Check API container and CORS.");
             }
         }
-
         load();
     }, []);
 
@@ -23,7 +22,6 @@ export default function Health() {
             <h2>Backend connectivity</h2>
 
             {error && <p className="error">{error}</p>}
-
             {!error && !data && <p>Checking backend status...</p>}
 
             {data && (

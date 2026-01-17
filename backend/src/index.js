@@ -2,6 +2,11 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import pg from "pg";
+import cookieParser from "cookie-parser";
+import authRoutes from "./routes/auth.js";
+import meRoutes from "./routes/me.js";
+import lessonsRoutes from "./routes/lessons.js";
+import catalogRoutes from "./routes/catalog.js";
 
 const { Pool } = pg;
 
@@ -22,6 +27,8 @@ app.use(
 
 app.use(express.json());
 
+app.use(cookieParser());
+
 /**
  * DATABASE_URL will come from docker-compose (environment variables).
  * In containers, we connect to Postgres using the service name "db".
@@ -29,6 +36,11 @@ app.use(express.json());
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
+
+app.use("/auth", authRoutes);
+app.use("/me", meRoutes);
+app.use("/lessons", lessonsRoutes);
+app.use("/catalog", catalogRoutes);
 
 /**
  * Health endpoint (used by humans and by load balancers later).

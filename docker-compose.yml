@@ -23,6 +23,10 @@ services:
     environment:
       PORT: "5000"
       DATABASE_URL: "postgres://sentle:sentle_dev_password@db:5432/sentle_driving"
+      JWT_ACCESS_SECRET: "dev_access_secret_change_me"
+      JWT_REFRESH_SECRET: "dev_refresh_secret_change_me"
+      ACCESS_TOKEN_TTL_SECONDS: "900"
+      REFRESH_TOKEN_TTL_SECONDS: "604800"
     ports:
       - "5000:5000"
     depends_on:

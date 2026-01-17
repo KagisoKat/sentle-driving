@@ -1,7 +1,14 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Health from "./pages/Health.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Lessons from "./pages/Lessons.jsx";
+import ProtectedRoute from "./auth/ProtectedRoute.jsx";
+import { useAuth } from "./auth/AuthContext.jsx";
 
 export default function App() {
+    const { isAuthenticated } = useAuth();
+
     return (
         <div className="app">
             <header className="header">
@@ -10,25 +17,35 @@ export default function App() {
                 <nav className="nav">
                     <Link to="/">Home</Link>
                     <Link to="/health">API Health</Link>
+                    <Link to="/login">Login</Link>
+                    {isAuthenticated && <Link to="/dashboard">Dashboard</Link>}
+                    {isAuthenticated && <Link to="/lessons">Lessons</Link>}
                 </nav>
             </header>
 
             <main className="main">
                 <Routes>
+                    <Route path="/" element={<p>Home</p>} />
+                    <Route path="/health" element={<Health />} />
+                    <Route path="/login" element={<Login />} />
+
                     <Route
-                        path="/"
+                        path="/dashboard"
                         element={
-                            <div className="card">
-                                <h2>Welcome</h2>
-                                <p>
-                                    Frontend is running. This is the foundation for the driving
-                                    school dashboard.
-                                </p>
-                            </div>
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
                         }
                     />
 
-                    <Route path="/health" element={<Health />} />
+                    <Route
+                        path="/lessons"
+                        element={
+                            <ProtectedRoute>
+                                <Lessons />
+                            </ProtectedRoute>
+                        }
+                    />
                 </Routes>
             </main>
         </div>
