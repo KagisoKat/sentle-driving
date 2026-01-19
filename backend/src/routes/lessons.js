@@ -12,8 +12,12 @@ const createLessonSchema = z.object({
     studentId: z.string().uuid(),
     instructorId: z.string().uuid(),
     vehicleId: z.string().uuid().nullable().optional(),
-    startsAt: z.string().datetime({ offset: true }),
-    endsAt: z.string().datetime({ offset: true }),
+    startsAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: "Invalid datetime"
+    }),
+    endsAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: "Invalid datetime"
+    }),
     notes: z.string().max(500).optional()
 });
 
@@ -35,10 +39,26 @@ router.get("/", requireAuth, async (req, res) => {
 
     if (role === "admin") {
         const r = await pool.query(
-            `SELECT id, student_id, instructor_id, vehicle_id, starts_at, ends_at, status, notes
-       FROM lessons
-       ORDER BY starts_at DESC
-       LIMIT $1`,
+            `SELECT
+               l.id,
+               l.starts_at, l.ends_at, l.status, l.notes,
+
+               s.id AS student_id,
+               s.full_name AS student_name,
+
+               i.id AS instructor_id,
+               i.full_name AS instructor_name,
+
+               v.id AS vehicle_id,
+               CONCAT(v.make, ' ', v.model, ' (', v.registration_number, ')') AS vehicle_label
+
+             FROM lessons l
+             JOIN students s ON s.id = l.student_id
+             JOIN instructors i ON i.id = l.instructor_id
+             LEFT JOIN vehicles v ON v.id = l.vehicle_id
+
+             ORDER BY l.starts_at DESC
+             LIMIT $1`,
             [limit]
         );
         return res.json({ ok: true, lessons: r.rows });
@@ -46,12 +66,27 @@ router.get("/", requireAuth, async (req, res) => {
 
     if (role === "instructor") {
         const r = await pool.query(
-            `SELECT l.id, l.student_id, l.instructor_id, l.vehicle_id, l.starts_at, l.ends_at, l.status, l.notes
-       FROM lessons l
-       JOIN instructors i ON i.id = l.instructor_id
-       WHERE i.user_id = $1
-       ORDER BY l.starts_at DESC
-       LIMIT $2`,
+            `SELECT
+               l.id,
+               l.starts_at, l.ends_at, l.status, l.notes,
+
+               s.id AS student_id,
+               s.full_name AS student_name,
+
+               i.id AS instructor_id,
+               i.full_name AS instructor_name,
+
+               v.id AS vehicle_id,
+               CONCAT(v.make, ' ', v.model, ' (', v.registration_number, ')') AS vehicle_label
+
+             FROM lessons l
+             JOIN instructors i ON i.id = l.instructor_id
+             JOIN students s ON s.id = l.student_id
+             LEFT JOIN vehicles v ON v.id = l.vehicle_id
+
+             WHERE i.user_id = $1
+             ORDER BY l.starts_at DESC
+             LIMIT $2`,
             [req.user.id, limit]
         );
         return res.json({ ok: true, lessons: r.rows });
@@ -59,12 +94,27 @@ router.get("/", requireAuth, async (req, res) => {
 
     // student
     const r = await pool.query(
-        `SELECT l.id, l.student_id, l.instructor_id, l.vehicle_id, l.starts_at, l.ends_at, l.status, l.notes
-     FROM lessons l
-     JOIN students s ON s.id = l.student_id
-     WHERE s.user_id = $1
-     ORDER BY l.starts_at DESC
-     LIMIT $2`,
+        `SELECT
+           l.id,
+           l.starts_at, l.ends_at, l.status, l.notes,
+
+           s.id AS student_id,
+           s.full_name AS student_name,
+
+           i.id AS instructor_id,
+           i.full_name AS instructor_name,
+
+           v.id AS vehicle_id,
+           CONCAT(v.make, ' ', v.model, ' (', v.registration_number, ')') AS vehicle_label
+
+         FROM lessons l
+         JOIN students s ON s.id = l.student_id
+         JOIN instructors i ON i.id = l.instructor_id
+         LEFT JOIN vehicles v ON v.id = l.vehicle_id
+
+         WHERE s.user_id = $1
+         ORDER BY l.starts_at DESC
+         LIMIT $2`,
         [req.user.id, limit]
     );
 
@@ -93,14 +143,39 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     try {
-        const r = await pool.query(
+        const insert = await pool.query(
             `INSERT INTO lessons (student_id, instructor_id, vehicle_id, starts_at, ends_at, status, notes)
-       VALUES ($1, $2, $3, $4, $5, 'scheduled', $6)
-       RETURNING id, student_id, instructor_id, vehicle_id, starts_at, ends_at, status, notes`,
+             VALUES ($1, $2, $3, $4, $5, 'scheduled', $6)
+             RETURNING id`,
             [studentId, instructorId, vehicleId ?? null, startsAt, endsAt, notes ?? null]
         );
 
-        return res.status(201).json({ ok: true, lesson: r.rows[0] });
+        const lessonId = insert.rows[0].id;
+
+        const full = await pool.query(
+            `SELECT
+               l.id,
+               l.starts_at, l.ends_at, l.status, l.notes,
+
+               s.id AS student_id,
+               s.full_name AS student_name,
+
+               i.id AS instructor_id,
+               i.full_name AS instructor_name,
+
+               v.id AS vehicle_id,
+               CONCAT(v.make, ' ', v.model, ' (', v.registration_number, ')') AS vehicle_label
+
+             FROM lessons l
+             JOIN students s ON s.id = l.student_id
+             JOIN instructors i ON i.id = l.instructor_id
+             LEFT JOIN vehicles v ON v.id = l.vehicle_id
+
+             WHERE l.id = $1`,
+            [lessonId]
+        );
+
+        return res.status(201).json({ ok: true, lesson: full.rows[0] });
     } catch (e) {
         // Exclusion constraint violation -> double booking
         if (String(e).includes("lessons_no_overlap_instructor")) {
